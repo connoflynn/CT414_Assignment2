@@ -32,8 +32,7 @@ public class MapReduceAssignment {
         System.exit(0);
     }
 
-
-    // APPROACH #3: Distributed MapReduce
+    //Distributed MapReduce
     {
       final Map<String, Map<String, Integer>> output = new HashMap<String, Map<String, Integer>>();
 
@@ -129,6 +128,7 @@ public class MapReduceAssignment {
       }
 
       System.out.println(output);
+      System.out.println("Number of invividual words found: " + output.size());
     }
   }
 
@@ -191,7 +191,7 @@ public class MapReduceAssignment {
     private final String file;
 
     public MappedItem(String word, String file) {
-      this.word = word;
+      this.word = cleanWord(word);
       this.file = file;
     }
 
@@ -206,6 +206,18 @@ public class MapReduceAssignment {
     @Override
     public String toString() {
       return "[\"" + word + "\",\"" + file + "\"]";
+    }
+
+    //Clean the word (Change to lowercase and remove any punctuations from the word)
+    public String cleanWord(String word){
+
+      word = word.toLowerCase();
+
+      word = word.replaceAll("[.,?!:;*£$&(){}@/`_+=-]", "");
+      word = word.replace("\"", "");
+      word = word.replace("'", "");
+
+      return word;
     }
   }
 
