@@ -36,8 +36,12 @@ public class MapReduceAssignment {
     {
       final Map<String, Map<String, Integer>> output = new HashMap<String, Map<String, Integer>>();
 
-      // MAP:
+      final long mapTime;
+      final long groupTime;
+      final long reduceTime;
 
+      // MAP:
+      long beforeMapTime = System.currentTimeMillis();
       final List<MappedItem> mappedItems = new LinkedList<MappedItem>();
 
       final MapCallback<String, MappedItem> mapCallback = new MapCallback<String, MappedItem>() {
@@ -73,9 +77,12 @@ public class MapReduceAssignment {
           throw new RuntimeException(e);
         }
       }
+      long afterMapTime = System.currentTimeMillis();
+      mapTime = afterMapTime - beforeMapTime;
 
       // GROUP:
 
+      long beforeGroupTime = System.currentTimeMillis();
       Map<String, List<String>> groupedItems = new HashMap<String, List<String>>();
 
       Iterator<MappedItem> mappedIter = mappedItems.iterator();
@@ -90,9 +97,12 @@ public class MapReduceAssignment {
         }
         list.add(file);
       }
+      long afterGroupTime = System.currentTimeMillis();
+      groupTime = afterGroupTime - beforeGroupTime;
 
       // REDUCE:
 
+      long beforeReduceTime = System.currentTimeMillis();
       final ReduceCallback<String, String, Integer> reduceCallback = new ReduceCallback<String, String, Integer>() {
         @Override
         public synchronized void reduceDone(String k, Map<String, Integer> v) {
@@ -126,9 +136,14 @@ public class MapReduceAssignment {
           throw new RuntimeException(e);
         }
       }
+      long afterReduceTime = System.currentTimeMillis();
+      reduceTime = afterReduceTime - beforeReduceTime;
 
       System.out.println(output);
       System.out.println("Number of invividual words found: " + output.size());
+      System.out.println("Time taken for map phase: " + mapTime + "ms");
+      System.out.println("Time taken for group phase: " + groupTime + "ms");
+      System.out.println("Time taken for reduce phase: " + reduceTime + "ms");
     }
   }
 
