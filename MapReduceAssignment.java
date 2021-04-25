@@ -147,26 +147,6 @@ public class MapReduceAssignment {
     }
   }
 
-  public static void map(String file, String contents, List<MappedItem> mappedItems) {
-    String[] words = contents.trim().split("\\s+");
-    for(String word: words) {
-      mappedItems.add(new MappedItem(word, file));
-    }
-  }
-
-  public static void reduce(String word, List<String> list, Map<String, Map<String, Integer>> output) {
-    Map<String, Integer> reducedList = new HashMap<String, Integer>();
-    for(String file: list) {
-      Integer occurrences = reducedList.get(file);
-      if (occurrences == null) {
-        reducedList.put(file, 1);
-      } else {
-        reducedList.put(file, occurrences.intValue() + 1);
-      }
-    }
-    output.put(word, reducedList);
-  }
-
   public static interface MapCallback<E, V> {
 
     public void mapDone(E key, List<V> values);
