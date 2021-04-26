@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
@@ -36,12 +37,11 @@ public class MapReduceAssignment {
     {
       final Map<String, Map<String, Integer>> output = new HashMap<String, Map<String, Integer>>();
 
-      final long mapTime;
-      final long groupTime;
-      final long reduceTime;
+      long mapTime;
+      long groupTime;
+      long reduceTime;
 
       // MAP:
-      long beforeMapTime = System.currentTimeMillis();
       final List<MappedItem> mappedItems = new LinkedList<MappedItem>();
 
       final MapCallback<String, MappedItem> mapCallback = new MapCallback<String, MappedItem>() {
@@ -51,23 +51,40 @@ public class MapReduceAssignment {
         }
       };
 
-      List<Thread> mapCluster = new ArrayList<Thread>(input.size());
+      List<Thread> mapCluster = new ArrayList<Thread>();
 
-      Iterator<Map.Entry<String, String>> inputIter = input.entrySet().iterator();
-      while(inputIter.hasNext()) {
-        Map.Entry<String, String> entry = inputIter.next();
-        final String file = entry.getKey();
-        final String contents = entry.getValue();
+      int linesPerThread = 1000;
 
-        Thread t = new Thread(new Runnable() {
-          @Override
-          public void run() {
-            map(file, contents, mapCallback);
-          }
-        });
-        mapCluster.add(t);
-        t.start();
+      // A map that will be a key of the file name and value of a list of strings that are 
+      // split by the number of lines specified
+      Map<String, List<String>> splitInput = new HashMap<String, List<String>>();
+      for (String i : input.keySet()) {
+        List<String> lines = splitStrings(input.get(i), linesPerThread);
+        splitInput.put(i, lines);
       }
+      
+      //Measure time of mapping phase
+      long beforeMapTime = System.currentTimeMillis();
+
+      Iterator<Map.Entry<String, List<String>>> inputIter = splitInput.entrySet().iterator();
+      while(inputIter.hasNext()) {
+        Map.Entry<String, List<String>> entry = inputIter.next();
+
+        for(int i=0;i<entry.getValue().size();i++){
+          final String file = entry.getKey();
+          final String contents = entry.getValue().get(i);
+
+          Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+              map(file, contents, mapCallback);
+            }
+          });
+          mapCluster.add(t);
+          t.start();
+        }
+      }
+      System.out.println("Number of Map Phase Threads created: " + mapCluster.size());
 
       // wait for mapping phase to be over:
       for(Thread t : mapCluster) {
@@ -235,4 +252,30 @@ public class MapReduceAssignment {
     }
   }
 
+  //A fuction to split a string into an arraylist of strings by the number of lines specified 
+  private static List<String> splitStrings(String input, int linesPerSplit){
+    List<String> output = new ArrayList<>();
+
+    BufferedReader br = new BufferedReader(new StringReader(input));
+    String line;
+    String linesSection = "";
+    int count = 0;
+    try {
+      while((line = br.readLine()) != null){
+        linesSection += line + "\n";
+        count += 1;
+        if(count%linesPerSplit == 0){
+          output.add(linesSection);
+          linesSection = "";
+        }
+      }
+      if(!linesSection.equals("")){
+        output.add(linesSection);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return output;
+  }
 }
