@@ -15,8 +15,8 @@ public class MapReduceAssignment {
 
   public static void main(String[] args) {
 
-    if (args.length < 3) {
-      System.err.println("usage: java MapReduceFiles file1.txt file2.txt file3.txt");
+    if (args.length != 5) {
+      System.err.println("usage: java MapReduceFiles file1.txt file2.txt file3.txt <> <>");
 
     }
 
@@ -53,7 +53,7 @@ public class MapReduceAssignment {
 
       List<Thread> mapCluster = new ArrayList<Thread>();
 
-      int linesPerThread = 1000;
+      int linesPerThread = Integer.parseInt(args[3]);
 
       // A map that will be a key of the file name and value of a list of strings that are 
       // split by the number of lines specified
@@ -84,7 +84,6 @@ public class MapReduceAssignment {
           t.start();
         }
       }
-      System.out.println("Number of Map Phase Threads created: " + mapCluster.size());
 
       // wait for mapping phase to be over:
       for(Thread t : mapCluster) {
@@ -126,7 +125,7 @@ public class MapReduceAssignment {
         }
       };
 
-      int sizeOfGroups = 3;
+      int sizeOfGroups = Integer.parseInt(args[4]);
 
       Iterator<Map.Entry<String, List<String>>> groupedIter = groupedItems.entrySet().iterator();
 

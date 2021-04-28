@@ -22,7 +22,7 @@ do
     words=$((i * multiply))
     echo ""
     echo "Words per thread: $words"
-    java MapReduceAssignment Frankenstein.txt Moby_Dick.txt The_Great_Gatsby.txt 1000 $i
+    java MapReduceAssignment Frankenstein.txt Moby_Dick.txt The_Great_Gatsby.txt 1000 $words
 done
 
 echo "Finished"
