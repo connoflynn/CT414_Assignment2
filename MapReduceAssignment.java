@@ -119,7 +119,6 @@ public class MapReduceAssignment {
 
       // REDUCE:
 
-      long beforeReduceTime = System.currentTimeMillis();
       final ReduceCallback<String, String, Integer> reduceCallback = new ReduceCallback<String, String, Integer>() {
         @Override
         public synchronized void reduceDone(String k, Map<String, Integer> v) {
@@ -127,18 +126,46 @@ public class MapReduceAssignment {
         }
       };
 
-      List<Thread> reduceCluster = new ArrayList<Thread>(groupedItems.size());
+      int sizeOfGroups = 3;
 
       Iterator<Map.Entry<String, List<String>>> groupedIter = groupedItems.entrySet().iterator();
+
+      //groupOfGroups is a list containing lists of lists of size "sizeOfGroups" of map entries
+      //groupOfGroups will be used to create one thread per list item
+      List<List<Map.Entry<String, List<String>>>> groupOfGroups= new ArrayList<>();
+      //create a list that will store map entrys and will be the size of the groups
+      List<Map.Entry<String, List<String>>> temp= new ArrayList<>();
+      int count =0;
+      //iterate the grouped items and add them to a new list of lists
       while(groupedIter.hasNext()) {
         Map.Entry<String, List<String>> entry = groupedIter.next();
-        final String word = entry.getKey();
-        final List<String> list = entry.getValue();
+        temp.add(entry);
+        count++;
+        //if the size is the size given
+        if(count%sizeOfGroups == 0){
+          groupOfGroups.add(new ArrayList<>(temp));
+          temp.clear();
+        }
+      }
+      if(!temp.isEmpty()){
+        groupOfGroups.add(temp);
+      }
+
+      List<Thread> reduceCluster = new ArrayList<Thread>();
+
+      long beforeReduceTime = System.currentTimeMillis();
+      Iterator<List<Map.Entry<String, List<String>>>> groupOfGroupIter = groupOfGroups.iterator();
+      while(groupOfGroupIter.hasNext()) {
+        List<Map.Entry<String, List<String>>> entrys = groupOfGroupIter.next();
 
         Thread t = new Thread(new Runnable() {
           @Override
           public void run() {
-            reduce(word, list, reduceCallback);
+            for(int i =0; i<entrys.size();i++){
+              final String word = entrys.get(i).getKey();
+              final List<String> list = entrys.get(i).getValue();
+              reduce(word, list, reduceCallback);
+            }
           }
         });
         reduceCluster.add(t);
